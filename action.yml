@@ -11,5 +11,5 @@ inputs:
     description: 'Comma-separated list of labels allowed for the sponsor team'
     required: true 
 runs:
-  using: 'node12'
+  using: 'node20'
   main: 'index.js'
