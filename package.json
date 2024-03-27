@@ -4,10 +4,10 @@
   "description": "A GitHub Action to revert label changes by sponsor team members if not on the allowed list",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1" 
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@actions/core": "^1.9.0",
-    "@actions/github": "^5.0.0"
+    "@actions/core": "^1.10.1",
+    "@actions/github": "^5.1.1"
   }
 }
