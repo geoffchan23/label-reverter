@@ -1,0 +1,12 @@
+name: 'Revert Sponsor Label Changes' # Name of your action
+description: 'Reverts label changes made by members of a specified sponsor team' 
+inputs:
+  github-token: 
+    description: 'GitHub token with required permissions'
+    required: true
+  sponsor-team-slug:
+    description: 'The slug of your sponsor team'
+    required: true
+runs:
+  using: 'node12'
+  main: 'index.js'
