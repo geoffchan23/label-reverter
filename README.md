@@ -1,4 +1,4 @@
-# code4rena-repo-moderator (or your preferred action name)
+# repo-moderator
 
 This GitHub Action empowers repositories to regulate sponsor team interactions with GitHub Issues, Pull Requests, and Discussions, ensuring optimal collaboration and workflow integrity.
 
@@ -19,32 +19,32 @@ This GitHub Action empowers repositories to regulate sponsor team interactions w
 
 **Setup**
 
-1. **Add Workflow:** Create a `.github/workflows/sponsor-restrictions.yml` (or similar) file in your repository. See the "Workflow Example" section below.
+1. **Add Workflow:** Create a `.github/workflows/repo-moderator.yml` file in your repository. See the "Workflow Example" section below.
 2. **Secrets:**  In your repository settings, add a secret named `REPO_MODERATOR_TOKEN`. Use your generated token value here. 
 
 **Workflow Example**
 
 ```yaml
-name: Sponsor Restrictions Enforcement
+name: Repo Moderator
 
-on: 
+on:
   issues: 
     types: [labeled, unlabeled, closed, reopened, assigned] 
   pull_request:
     types: [closed, reopened, assigned]
-  issue_comment: 
-    types: [created, edited, deleted]  # For hidden comments
-  discussion_deleted:  # Custom event triggered by a webhook
-  discussion_category_changed: 
+  issue_comment:
+    types: [created, edited, deleted]
+  discussion_comment:
+    types: [deleted]
 
 jobs:
-  enforce-restrictions:
-    runs-on: ubuntu-latest 
+  revert-label:
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Enforce Sponsor Restrictions
-        uses: your-org/code4rena-sponsor-control@main 
+      - uses: actions/checkout@v4
+      - name: Revert Label Changes
+        uses: geoffchan23/repo-moderator@main
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }} 
-          sponsor-team-slug: team-one, team-two  
-          allowed-labels: sponsor confirmed, sponsor disputed, sponsor acknowledged 
+          github-token: ${{ secrets.REPO_MODERATOR_TOKEN }}
+          sponsor-team-slug: "team name, another team name"
+          allowed-labels: "sponsor confirmed, sponsor disputed, sponsor acknowledged, disagree with severity"
