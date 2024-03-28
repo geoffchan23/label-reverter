@@ -46,6 +46,9 @@ async function run() {
             });
           } else if (github.context.payload.action === 'unlabeled') {
             // Re-add label if it's removed and not allowed to be removed
+
+            console.log('re-add label', allowedLabels,labelName, repo.owner.login, repo.name, issueNumber);
+
             await octokit.rest.issues.addLabels({
               owner: repo.owner.login,
               repo: repo.name,
@@ -59,7 +62,7 @@ async function run() {
             owner: repo.owner.login,
             repo: repo.name,
             issue_number: issueNumber,
-            body: `@${user} Label changes (additions and removals) by sponsor team members are restricted to the following labels: ${allowedLabels.join(', ')}.`
+            body: `@${user} Sponsors can only use these labels: ${allowedLabels.join(', ')}.`
           });
         }
       }
