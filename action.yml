@@ -1,4 +1,4 @@
-name: 'Revert Sponsor Label Changes' 
+name: 'Repo Moderator' 
 description: 'Reverts label changes made by members of a specified sponsor team' 
 inputs:
   github-token: 

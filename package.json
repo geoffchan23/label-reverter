@@ -1,7 +1,7 @@
 {
-  "name": "revert-sponsor-label-action",
+  "name": "repo-moderator",
   "version": "1.0.0",
-  "description": "A GitHub Action to revert label changes by sponsor team members if not on the allowed list",
+  "description": "This GitHub Action empowers repositories to regulate sponsor team interactions with GitHub Issues, Pull Requests, and Discussions, ensuring optimal collaboration and workflow integrity.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
