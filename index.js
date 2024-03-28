@@ -37,8 +37,9 @@ async function run() {
       allTeamMembers = allTeamMembers.concat(teamMembers);
     }
 
-    // Handle label changes, closing/reopening, and assignments 
-    if (github.context.eventName === 'issues' || github.context.eventName === 'pull_request') {
+    // Handle label changes, closing/reopening, assignments, hidden comments, discussion deletions/category changes
+    if (github.context.eventName === 'issues' || github.context.eventName === 'pull_request' || github.context.eventName === 'comment_hidden' || github.context.eventName === 'discussion_deleted' || github.context.eventName === 'discussion_category_changed') { 
+
       const action = github.context.payload.action;
 
       if (allTeamMembers.some((member) => member.login === user)) {
@@ -47,59 +48,60 @@ async function run() {
           const labelName = github.context.payload.label.name;
           if (!allowedLabels.includes(labelName)) {
             if (action === 'labeled') {
-              await octokit.rest.issues.removeLabel({
-                owner: repo.owner.login,
-                repo: repo.name,
-                issue_number: issueNumber,
-                name: labelName
-              });
+              await octokit.rest.issues.removeLabel({ owner: repo.owner.login, repo: repo.name, issue_number: issueNumber, name: labelName});
             } else if (action === 'unlabeled') {
-              await octokit.rest.issues.addLabels({
-                owner: repo.owner.login,
-                repo: repo.name,
-                issue_number: issueNumber,
-                labels: [labelName]
-              });
+              await octokit.rest.issues.addLabels({ owner: repo.owner.login, repo: repo.name, issue_number: issueNumber, labels: [labelName] });
             }
-            await octokit.rest.issues.createComment({
-              owner: repo.owner.login,
-              repo: repo.name,
-              issue_number: issueNumber,
-              body: `@${user} Sponsors can only use these labels: ${allowedLabels.join(', ')}.`
-            });
+            await octokit.rest.issues.createComment({ owner: repo.owner.login, repo: repo.name, issue_number: issueNumber, body: `@${user} Sponsors can only use these labels: ${allowedLabels.join(', ')}.`});
           }
         }
 
         // --- Closing/Reopening/Assignment Handling ---
         if (action === 'closed' || action === 'reopened' || action === 'assigned') {
           if (action === 'closed') {
-            await octokit.rest.issues.update({
-              owner: repo.owner.login,
-              repo: repo.name,
-              issue_number: issueNumber,
-              state: 'open'
-            });
+            await octokit.rest.issues.update({ owner: repo.owner.login, repo: repo.name, issue_number: issueNumber, state: 'open'});
           } else if (action === 'reopened') {
-            await octokit.rest.issues.update({
-              owner: repo.owner.login,
-              repo: repo.name,
-              issue_number: issueNumber,
-              state: 'closed'
-            });
+            await octokit.rest.issues.update({ owner: repo.owner.login, repo: repo.name, issue_number: issueNumber, state: 'closed'});
           } else if (action === 'assigned') {
-            await octokit.rest.issues.removeAssignees({
-              owner: repo.owner.login,
-              repo: repo.name,
-              issue_number: issueNumber,
-              assignees: [user]
-            });
+            await octokit.rest.issues.removeAssignees({ owner: repo.owner.login, repo: repo.name, issue_number: issueNumber, assignees: [user] });
           }
-          await octokit.rest.issues.createComment({
-            owner: repo.owner.login,
-            repo: repo.name,
-            issue_number: issueNumber,
-            body: `@${user} Sponsors are not allowed to close, reopen, or assign issues or pull requests.`
-          });
+          await octokit.rest.issues.createComment({ owner: repo.owner.login, repo: repo.name, issue_number: issueNumber, body: `@${user} Sponsors are not allowed to close, reopen, or assign issues or pull requests.`});
+        }
+
+        // --- Hidden Comment Handling ---
+        if (github.context.eventName === 'comment_hidden') { 
+          const hiddenCommentAuthor = github.context.payload.comment.user.login;
+
+          if (allTeamMembers.some(member => member.login === hiddenCommentAuthor)) { 
+            const { data: comments } = await octokit.rest.issues.listComments({ owner: repo.owner.login, repo: repo.name, issue_number: issueNumber});
+            const hiddenComment = comments.find(comment => comment.user.login === hiddenCommentAuthor && !comment.body);
+
+            if (hiddenComment) {
+              await octokit.rest.issues.createComment({ owner: repo.owner.login, repo: repo.name, issue_number: issueNumber, body: `@${hiddenCommentAuthor} Sponsors are not allowed to hide comments. Original comment: ${hiddenComment.body}`});
+            }
+          }
+        }
+
+        // --- Discussion Deletion Handling ---
+        if (github.context.eventName === 'discussion_deleted') {
+          const discussionTitle = github.context.payload.discussion.title; 
+          const discussionBody = github.context.payload.discussion.body;
+          const discussionCreator = github.context.payload.discussion.user.login; 
+
+          if (allTeamMembers.some(member => member.login === discussionCreator)) { 
+            await octokit.rest.discussions.createDiscussion({ owner: repo.owner.login, repo: repo.name, title: discussionTitle, body: discussionBody });
+            // ... (notify moderators)
+          }
+        }
+
+         // --- Discussion Category Change Handling ---
+        if (github.context.eventName === 'discussion_category_changed') {
+          const discussionCategory = github.context.payload.changes.category.from; 
+          const discussionCreator = github.context.payload.discussion.user.login;
+
+          if (allTeamMembers.some(member => member.login === discussionCreator)) {
+            await octokit.rest.discussions.updateDiscussion({ owner: repo.owner.login, repo: repo.name, discussion_number: github.context.payload.discussion.id, category_id: discussionCategory.id });
+          }
         }
       }
     }
@@ -108,4 +110,4 @@ async function run() {
   }
 }
 
-run();
+run(); 
