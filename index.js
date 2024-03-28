@@ -63,12 +63,14 @@ async function run() {
           } else if (action === 'reopened') {
             await octokit.rest.issues.update({ owner: repo.owner.login, repo: repo.name, issue_number: issueNumber, state: 'closed'});
           } else if (action === 'assigned') {
+            //Currently not working as expected. If I assign an issue to myself it will unassign me. But if I assign the issue to someone else it does not unassign that person from the issue.
             await octokit.rest.issues.removeAssignees({ owner: repo.owner.login, repo: repo.name, issue_number: issueNumber, assignees: [user] });
           }
           await octokit.rest.issues.createComment({ owner: repo.owner.login, repo: repo.name, issue_number: issueNumber, body: `@${user} Sponsors are not allowed to close, reopen, or assign issues or pull requests.`});
         }
 
         // --- Hidden Comment Handling ---
+        // Currently doesn't work. Could be hallucinated code as I don't see any reference to a comment_hidden event here https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#issue_comment
         if (github.context.eventName === 'comment_hidden') { 
           const hiddenCommentAuthor = github.context.payload.comment.user.login;
 
@@ -83,6 +85,7 @@ async function run() {
         }
 
         // --- Discussion Deletion Handling ---
+        // Needs testing that this works
         if (github.context.eventName === 'discussion_deleted') {
           const discussionTitle = github.context.payload.discussion.title; 
           const discussionBody = github.context.payload.discussion.body;
@@ -95,6 +98,7 @@ async function run() {
         }
 
          // --- Discussion Category Change Handling ---
+         // Needs testing that this works
         if (github.context.eventName === 'discussion_category_changed') {
           const discussionCategory = github.context.payload.changes.category.from; 
           const discussionCreator = github.context.payload.discussion.user.login;
