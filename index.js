@@ -62,7 +62,7 @@ async function run() {
             owner: repo.owner.login,
             repo: repo.name,
             issue_number: issueNumber,
-            body: `@${user} Sponsors can only use these labels: ${allowedLabels.join(', ')}.`
+            body: `@${user} Sponsors can only use these labels: ` + "`sponsor confirmed`, `sponsor disputed`, `sponsor acknowledged`, and `disagree with severity`."
           });
         }
       }
