@@ -5,9 +5,8 @@ async function run() {
   try {
     const repo = github.context.payload.repository;
     const issueNumber = github.context.payload.issue.number;
-    const addedLabel = github.context.payload.label.name;
     const user = github.context.payload.sender.login;
-    
+
     // Input handling (multiple teams, whitespace trimming)
     const sponsorTeamSlugs = core.getInput('sponsor-team-slug', { required: true })
       .split(',')
@@ -18,7 +17,7 @@ async function run() {
       .split(',') 
       .map(label => label.trim()); 
 
-    // Get team members using GitHub's REST API (iterate over slugs)
+    // Get team members using GitHub's REST API 
     const octokit = github.getOctokit(core.getInput('github-token', { required: true }));
     let allTeamMembers = [];
 
@@ -30,25 +29,39 @@ async function run() {
       allTeamMembers = allTeamMembers.concat(teamMembers);
     }
 
-    // Check if the user who added the label is in the sponsor team
-    if (allTeamMembers.some((member) => member.login === user)) {
-      // Check if the added label is within the allowed list
-      if (!allowedLabels.includes(addedLabel)) { 
-        // Remove the label if it's not allowed
-        await octokit.rest.issues.removeLabel({
-          owner: repo.owner.login,
-          repo: repo.name,
-          issue_number: issueNumber,
-          name: addedLabel
-        });
+    // Handle both label additions and removals
+    if (github.context.eventName === 'issues' && (github.context.payload.action === 'labeled' || github.context.payload.action === 'unlabeled')) { 
+      const labelName = github.context.payload.label.name; 
 
-        // (Optional) Send a notification 
-        await octokit.rest.issues.createComment({
-          owner: repo.owner.login,
-          repo: repo.name,
-          issue_number: issueNumber,
-          body: `@${user} Label changes by sponsor team members are restricted to the following labels: ${allowedLabels.join(', ')}. The label '${addedLabel}' has been removed.`
-        });
+      if (allTeamMembers.some((member) => member.login === user)) {
+        // Check if label is within allowed labels (both for adding and removing)
+        if (!allowedLabels.includes(labelName)) { 
+          if (github.context.payload.action === 'labeled') {
+            // Remove label if it's added and not allowed
+            await octokit.rest.issues.removeLabel({
+              owner: repo.owner.login,
+              repo: repo.name,
+              issue_number: issueNumber,
+              name: labelName
+            });
+          } else if (github.context.payload.action === 'unlabeled') {
+            // Re-add label if it's removed and not allowed to be removed
+            await octokit.rest.issues.addLabels({
+              owner: repo.owner.login,
+              repo: repo.name,
+              issue_number: issueNumber,
+              labels: [labelName] 
+            });
+          }
+
+         // (Optional) Send a notification - Modify as needed
+          await octokit.rest.issues.createComment({
+            owner: repo.owner.login,
+            repo: repo.name,
+            issue_number: issueNumber,
+            body: `@${user} Label changes (additions and removals) by sponsor team members are restricted to the following labels: ${allowedLabels.join(', ')}.`
+          });
+        }
       }
     }
   } catch (error) {
