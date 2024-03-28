@@ -7,21 +7,31 @@ async function run() {
     const issueNumber = github.context.payload.issue.number;
     const addedLabel = github.context.payload.label.name;
     const user = github.context.payload.sender.login;
-    const sponsorTeamSlug = core.getInput('sponsor-team-slug', { required: true });
+    
+    // Input handling (multiple teams, whitespace trimming)
+    const sponsorTeamSlugs = core.getInput('sponsor-team-slug', { required: true })
+      .split(',')
+      .map(slug => slug.trim()); 
 
-    // Allowed labels for the sponsor team
-    const allowedLabels = core.getInput('allowed-labels', { required: true }).split(','); 
+    // Input handling (allowed labels, whitespace trimming)
+    const allowedLabels = core.getInput('allowed-labels', { required: true })
+      .split(',') 
+      .map(label => label.trim()); 
 
-
-    // Get team members using GitHub's REST API
+    // Get team members using GitHub's REST API (iterate over slugs)
     const octokit = github.getOctokit(core.getInput('github-token', { required: true }));
-    const { data: teamMembers } = await octokit.rest.teams.listMembersInOrg({
-      org: repo.owner.login,
-      team_slug: sponsorTeamSlug
-    });
+    let allTeamMembers = [];
+
+    for (const teamSlug of sponsorTeamSlugs) {
+      const { data: teamMembers } = await octokit.rest.teams.listMembersInOrg({
+        org: repo.owner.login,
+        team_slug: teamSlug
+      });
+      allTeamMembers = allTeamMembers.concat(teamMembers);
+    }
 
     // Check if the user who added the label is in the sponsor team
-    if (teamMembers.some((member) => member.login === user)) {
+    if (allTeamMembers.some((member) => member.login === user)) {
       // Check if the added label is within the allowed list
       if (!allowedLabels.includes(addedLabel)) { 
         // Remove the label if it's not allowed
