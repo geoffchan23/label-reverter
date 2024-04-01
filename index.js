@@ -2,6 +2,7 @@ const core = require('@actions/core');
 const github = require('@actions/github');
 
 async function run() {
+  console.log("Payload", github.context.payload);
   try {
     const repo = github.context.payload.repository;
     const issueNumber = github.context.payload.issue.number;
