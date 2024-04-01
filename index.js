@@ -75,8 +75,6 @@ async function run() {
         }
       } else {
         // --- Closing/Reopening/Assignment Handling ---
-        const assignees = github.context.payload.assignee.login;
-  
         if (action === 'closed') {
           await octokit.rest.issues.update({
             owner,
@@ -92,6 +90,8 @@ async function run() {
             state: 'closed'
           });
         } else if (action === 'assigned') {
+          const assignees = github.context.payload.assignee.login;
+
           await octokit.rest.issues.removeAssignees({
             owner,
             repo,
@@ -99,6 +99,8 @@ async function run() {
             assignees
           });
         } else if (action === 'unassigned') {
+          const assignees = github.context.payload.assignee.login;
+
           await octokit.rest.issues.addAssignees({
             owner,
             repo,
