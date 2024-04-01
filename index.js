@@ -45,7 +45,7 @@ async function run() {
     if (allTeamMembers.some((member) => member.login === user)) {
 
       // --- Label Handling ---
-      if (github.context.eventName === 'issues' && (action === 'labeled' || action === 'unlabeled')) {
+      if (action === 'labeled' || action === 'unlabeled') {
         const labelName = github.context.payload.label.name;
         
         if (!allowedLabels.includes(labelName)) {
