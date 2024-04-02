@@ -5,12 +5,7 @@ This GitHub Action empowers repositories to regulate sponsor team interactions w
 **Key Features**
 
 * **Label Enforcement:** Restricts sponsors to a designated set of labels on issues and pull requests.
-
-> TBD whether these work
 * **Issue/PR Control:** Prevents sponsors from closing, reopening, or assigning issues and pull requests.
-* **Hidden Comment Protection:** Re-surfaces comments hidden by sponsors (with notification).
-* **Discussion Restoration:** Recreates Discussions deleted by sponsors.
-* **Discussion Category Guard:** Reverts discussion category changes made by sponsors.
 
 **Prerequisites**
 
@@ -29,22 +24,19 @@ name: Repo Moderator
 
 on:
   issues: 
-    types: [labeled, unlabeled, closed, reopened, assigned] 
+    types: [labeled, unlabeled, closed, reopened, assigned, unassigned] 
   pull_request:
-    types: [closed, reopened, assigned]
-  issue_comment:
-    types: [created, edited, deleted]
-  discussion_comment:
-    types: [deleted]
+    types: [closed, reopened, assigned, unassigned]
 
 jobs:
-  revert-label:
+  revert-action:
+    if: github.actor != 'C4-Staff'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Revert Label Changes
         uses: geoffchan23/repo-moderator@main
         with:
-          github-token: ${{ secrets.REPO_MODERATOR_TOKEN }}
-          sponsor-team-slug: "team name, another team name"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          sponsor-team-slug: "2022-01-dev-test-repo-sponsors"
           allowed-labels: "sponsor confirmed, sponsor disputed, sponsor acknowledged, disagree with severity"
