@@ -14,8 +14,8 @@ This GitHub Action empowers repositories to regulate sponsor team interactions w
 
 **Setup**
 
-1. **Add Workflow:** Create a `.github/workflows/repo-moderator.yml` file in your repository. See the "Workflow Example" section below.
-2. **Secrets:**  In your repository settings, add a secret named `REPO_MODERATOR_TOKEN`. Use your generated token value here. 
+1. **Add Workflow:** Create a `.github/workflows/repo-moderator.yml` file in your repository, copy over the "Workflow Example" below, and edit the `sponsor-team-slug` to the name of sponsor team in GitHub.
+2. **Secrets:**  This Action uses the default GitHub Action token `GITHUB_TOKEN`
 
 **Workflow Example**
 
@@ -38,5 +38,5 @@ jobs:
         uses: geoffchan23/repo-moderator@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          sponsor-team-slug: "2022-01-dev-test-repo-sponsors"
-          allowed-labels: "sponsor confirmed, sponsor disputed, sponsor acknowledged, disagree with severity"
+          sponsor-team-slug: "2024-04-sponsor-team-name"
+          allowed-labels: "sponsor confirmed, sponsor disputed, sponsor acknowledged"
